@@ -1,0 +1,37 @@
+# ------------------------------------------------------------------------------
+# Copyright (c) 2016 SUSE LINUX GmbH, Nuernberg, Germany.
+#
+# This program is free software; you can redistribute it and/or modify it under
+# the terms of version 3 of the GNU General Public License as published by the
+# Free Software Foundation.
+#
+# This program is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License along with
+# this program; if not, contact SUSE Linux GmbH.
+#
+# ------------------------------------------------------------------------------
+# Author: Howard Guo <hguo@suse.com>
+[Desktop Entry]
+Type=Application
+Categories=Settings;System;Qt;X-SuSE-YaST;X-SuSE-YaST-System;
+
+X-KDE-ModuleType=Library
+X-KDE-HasReadOnlyMode=true
+X-SuSE-YaST-Call=saptune
+
+X-SuSE-YaST-Group=System
+X-SuSE-YaST-RootOnly=true
+X-SuSE-YaST-AutoInst=all
+X-SuSE-YaST-AutoInstClonable=true
+X-SuSE-YaST-AutoInstResource=saptune
+X-SuSE-YaST-Keywords=sap,saptune,tune,tuned,optimise,optimize,performance
+
+Icon=yast-sysconfig
+Exec=xdg-su -c "/sbin/yast2 saptune"
+
+Name=System Tuning for SAP
+GenericName=Tune system according to SAP and SUSE recommendations
+StartupNotify=true
