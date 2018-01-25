@@ -354,7 +354,7 @@ module Saptune
                     return has_nw, has_hana, false, out
                 end
             end
-            return has_nw, has_nana, true, ''
+            return has_nw, has_hana, true, ''
         end
     end
     SaptuneConfInst = SaptuneConf.new
