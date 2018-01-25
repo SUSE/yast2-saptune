@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Thu Jan 25 14:10:52 UTC 2018 - varkoly@suse.com
+
+- Fix typo. bsc#1077615
+  sap-installation-wizard runs into an error (installing HANA2)
+
+-------------------------------------------------------------------
 Tue Aug  2 13:16:02 UTC 2016 - hguo@suse.com
 
 - Disable sapconf if its configuration hasn't been altered.
