@@ -283,6 +283,9 @@ module Saptune
         def can_replace_sapconf
             path_current = '/etc/sysconfig/sapconf'
             path_original = '/var/adm/fillup-templates/sysconfig.sapconf'
+            if !File.exists?(path_original)
+                path_original = '/usr/share/fillup-templates/sysconfig.sapconf'
+            end
             if !File.exists?(path_current) || !File.exists?(path_original)
                 return true
             end
@@ -305,9 +308,9 @@ module Saptune
             if status.exitstatus != 0
                 log.info('Failed to stop sapconf: ' + out)
             end
-            out, status = Open3.capture2e('systemctl', 'mask', 'sapconf.service')
+            out, status = Open3.capture2e('systemctl', 'disable', 'sapconf.service')
             if status.exitstatus != 0
-                log.info('Failed to mask sapconf: ' + out)
+                log.info('Failed to disable sapconf: ' + out)
             end
         end
 
@@ -325,13 +328,33 @@ module Saptune
             if can_replace_sapconf
                 disable_sapconf
                 log.info 'tuning system using saptune'
-                if has_nw
+                if has_nw && has_hana
+                    path_solution = '/usr/share/saptune/solutions'
+                    if !File.exists?(path_solution)
+                        # old saptune - apply both solutions
+                        out, status = call_saptune_and_log('solution', 'apply', 'NETWEAVER')
+                        if status != 0
+                            return has_nw, has_hana, false, out
+                        end
+                        out, status = call_saptune_and_log('solution', 'apply', 'HANA')
+                        if status != 0
+                            return has_nw, has_hana, false, out
+                        end
+                    else
+                        # new saptune - only one solution possible
+                        out, status = call_saptune_and_log('solution', 'apply', 'NETWEAVER+HANA')
+                        if status != 0
+                            return has_nw, has_hana, false, out
+                        end
+                    end
+                end
+                if has_nw && !has_hana
                     out, status = call_saptune_and_log('solution', 'apply', 'NETWEAVER')
                     if status != 0
                         return has_nw, has_hana, false, out
                     end
                 end
-                if has_hana
+                if has_hana && !has_nw
                     out, status = call_saptune_and_log('solution', 'apply', 'HANA')
                     if status != 0
                         return has_nw, has_hana, false, out

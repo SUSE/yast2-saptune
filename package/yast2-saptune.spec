@@ -1,7 +1,7 @@
 #
 # spec file for package yast2-saptune
 #
-# Copyright (c) 2016 SUSE LINUX Products GmbH, Nuernberg, Germany.
+# Copyright (c) 2016-2019 SUSE LLC.
 #
 # All modifications and additions to the file contributed by third parties
 # remain the property of their copyright owners, unless otherwise agreed
@@ -16,7 +16,7 @@
 #
 
 Name:           yast2-saptune
-Version:        1.2
+Version:        1.3
 Release:        0
 License:        GPL-3.0
 Summary:        An alternative and minimal interface for configuring saptune

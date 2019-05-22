@@ -1,4 +1,13 @@
 -------------------------------------------------------------------
+Mon May 22 12:19:40 UTC 2019 - abriel@suse.com
+
+- Fixes for bsc#1135879
+  Fix to disable tuned daemon, if saptune is not configured.
+  Adjust some misleading messages and lables.
+  Adapt the new saptune solution behaviour.
+  Add new path to the fillup-template directory.
+
+-------------------------------------------------------------------
 Thu Jan 25 14:10:52 UTC 2018 - varkoly@suse.com
 
 - Fix typo. bsc#1077615
