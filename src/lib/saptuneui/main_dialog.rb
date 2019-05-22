@@ -47,8 +47,8 @@ module Saptune
                 VSpacing(1),
                 MinWidth(50, Frame(_('Status'), HSquash(HBox(
                     VBox(
-                        Left(Label(_('Daemon Status'))),
-                        Left(Label(_('Configuration Status'))),
+                        Left(Label(_('tuned Daemon Status: '))),
+                        Left(Label(_('Configuration Status: '))),
                     ),
                     VBox(
                         Left(Label(Id(:daemon_status), '')),
@@ -125,7 +125,7 @@ Would you like to install and use it now?')) && Package.DoInstall(['saptune'])
                                 nw, hana, success, out = SaptuneConfInst.auto_config
                                 if success
                                     if !hana && !nw
-                                        Popup.Message(_('Cannot find a compatible installed SAP software to tune for, only generic performance tuning is performed.'))
+                                        Popup.Message(_('Cannot find a compatible installed SAP software to tune for, so no performance tuning is performed.'))
                                     else
                                         prods = ''
                                         prods += "- SAP Netweaver\n" if nw
@@ -138,14 +138,14 @@ Would you like to install and use it now?')) && Package.DoInstall(['saptune'])
                                 end
                             when :daemon_toggle
                                 case SaptuneConfInst.state
-                                    when :ok
+                                    when :ok, :no_conf
                                         success, out = SaptuneConfInst.set_state(false)
                                         if success
                                             Popup.AnyMessage(_('Success'), _('saptune is now disabled.'))
                                         else
                                             Popup.ErrorDetails(_('Failed to disable saptune'), _('Error output: ') + out)
                                         end
-                                    when :stopped, :no_conf
+                                    when :stopped
                                         success, out = SaptuneConfInst.set_state(true)
                                         if success
                                             Popup.AnyMessage(_('Success'), _('saptune is now enabled.'))
