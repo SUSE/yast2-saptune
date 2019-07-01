@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Mon Jul  1 10:04:03 UTC 2019 - abriel@suse.com
+
+- version update from 1.2 to 1.3 to include the fixes for
+  bsc#1077615 and bsc#1135879 (described below)
+
+-------------------------------------------------------------------
 Mon May 22 12:19:40 UTC 2019 - abriel@suse.com
 
 - Fixes for bsc#1135879
