@@ -1,6 +1,6 @@
 # encoding: utf-8
 # ------------------------------------------------------------------------------
-# Copyright (c) 2016 SUSE LINUX GmbH, Nuernberg, Germany.
+# Copyright (c) 2016-2021 SUSE LLC.
 #
 # This program is free software; you can redistribute it and/or modify it under
 # the terms of version 3 of the GNU General Public License as published by the
@@ -47,18 +47,18 @@ module Saptune
                 VSpacing(1),
                 MinWidth(50, Frame(_('Status'), HSquash(HBox(
                     VBox(
-                        Left(Label(_('tuned Daemon Status: '))),
+                        Left(Label(_('saptune Service Status: '))),
                         Left(Label(_('Configuration Status: '))),
                     ),
                     VBox(
-                        Left(Label(Id(:daemon_status), '')),
+                        Left(Label(Id(:service_status), '')),
                         Left(Label(Id(:config_status), '')),
                     ),
                 )))),
                 VSpacing(1),
                 MinWidth(50, Frame(_('Action'), HSquash(RadioButtonGroup(Id(:action), VBox(
                     Left(RadioButton(Id(:genconf), '')),
-                    Left(RadioButton(Id(:daemon_toggle), '')),
+                    Left(RadioButton(Id(:service_toggle), '')),
                 ))))),
                 VSpacing(1),
                 Label(_('saptune comprehensively manages system optimisations for SAP solutions.')),
@@ -71,21 +71,21 @@ module Saptune
                 ),
             ))
             case SaptuneConfInst.state
-                when :ok
-                    UI.ChangeWidget(Id(:daemon_status), :Label, _('Running'))
+                when :ok, :not_tuned
+                    UI.ChangeWidget(Id(:service_status), :Label, _('Running'))
                     UI.ChangeWidget(Id(:config_status), :Label, _('Present'))
                     UI.ChangeWidget(Id(:genconf), :Label, _('Re-generate configuration'))
-                    UI.ChangeWidget(Id(:daemon_toggle), :Label, _('Disable and stop the daemon'))
+                    UI.ChangeWidget(Id(:service_toggle), :Label, _('Disable and stop the service'))
                 when :stopped
-                    UI.ChangeWidget(Id(:daemon_status), :Label, _('Not Running'))
+                    UI.ChangeWidget(Id(:service_status), :Label, _('Not Running'))
                     UI.ChangeWidget(Id(:config_status), :Label, _('Unknown'))
-                    UI.ChangeWidget(Id(:genconf), :Label, _('Re-generate configuration and enable the daemon'))
-                    UI.ChangeWidget(Id(:daemon_toggle), :Label, _('Enable and start the daemon'))
+                    UI.ChangeWidget(Id(:genconf), :Label, _('Re-generate configuration and enable the service'))
+                    UI.ChangeWidget(Id(:service_toggle), :Label, _('Enable and start the service'))
                 when :no_conf
-                    UI.ChangeWidget(Id(:daemon_status), :Label, _('Running'))
+                    UI.ChangeWidget(Id(:service_status), :Label, _('Unknown'))
                     UI.ChangeWidget(Id(:config_status), :Label, _('Absent'))
                     UI.ChangeWidget(Id(:genconf), :Label, _('Generate configuration automatically'))
-                    UI.ChangeWidget(Id(:daemon_toggle), :Label, _('Disable and stop the daemon'))
+                    UI.ChangeWidget(Id(:service_toggle), :Label, _('Disable and stop the service'))
             end
             UI.RecalcLayout
 
@@ -136,9 +136,9 @@ Would you like to install and use it now?')) && Package.DoInstall(['saptune'])
                                 else
                                     Popup.ErrorDetails(_('Failed to apply new configuration'), _('Error output: ') + out)
                                 end
-                            when :daemon_toggle
+                            when :service_toggle
                                 case SaptuneConfInst.state
-                                    when :ok, :no_conf
+                                    when :ok, :no_conf, :not_tuned
                                         success, out = SaptuneConfInst.set_state(false)
                                         if success
                                             Popup.AnyMessage(_('Success'), _('saptune is now disabled.'))
