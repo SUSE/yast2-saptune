@@ -234,11 +234,27 @@ module Saptune
             end
         end
 
+        # Call systemctl (external program) to find out, if a service is enabled
+        def is_service_enabled
+            if is_new_saptune_vers
+                service = "saptune.service"
+            else
+                service = "tuned.service"
+            end
+            out, status = Open3.capture2e('systemctl', 'is-enabled', service)
+            log.info "systemctl is-enabled #{service}: #{status} #{out}"
+            if status.exitstatus == 0
+                return true
+            else
+                return false
+            end
+        end
+
         # Return status of saptune:
         # :ok - saptune is running and tuning has been done
         # :stopped - saptune's service (saptune.service) is stopped
         # :not_tuned - saptune has no applied notes
-        # :no_conf - saptune is not configured
+        # :no_conf - saptune is not configured (saptune is not the tuned profile)
         def state
             if is_new_saptune_vers
                 _, status = call_saptune_and_log('service', 'status')
@@ -249,10 +265,12 @@ module Saptune
                 return :ok
             elsif status == 1
                 return :stopped
+            elsif status == 2
+                return :no_conf
             elsif status == 3
                 return :not_tuned
             else
-                return :no_conf
+                return :unknown
             end
         end
 

@@ -35,7 +35,7 @@ describe SaptuneConfInst do
     end
 
     it '.state' do
-        expect(SaptuneConfInst.state).to eq(:no_conf)
+        expect(SaptuneConfInst.state).to eq(:unknown)
     end
 
     it '.set_state' do

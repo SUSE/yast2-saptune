@@ -72,20 +72,40 @@ module Saptune
             ))
             case SaptuneConfInst.state
                 when :ok, :not_tuned
-                    UI.ChangeWidget(Id(:service_status), :Label, _('Running'))
+                    if SaptuneConfInst.is_service_enabled
+                        UI.ChangeWidget(Id(:service_status), :Label, _('Enabled and Running'))
+                        UI.ChangeWidget(Id(:service_toggle), :Label, _('Disable and stop the service'))
+                    else
+                        UI.ChangeWidget(Id(:service_status), :Label, _('Disabled and Running'))
+                        UI.ChangeWidget(Id(:service_toggle), :Label, _('Stop the service'))
+                    end
                     UI.ChangeWidget(Id(:config_status), :Label, _('Present'))
                     UI.ChangeWidget(Id(:genconf), :Label, _('Re-generate configuration'))
-                    UI.ChangeWidget(Id(:service_toggle), :Label, _('Disable and stop the service'))
                 when :stopped
-                    UI.ChangeWidget(Id(:service_status), :Label, _('Not Running'))
+                    if SaptuneConfInst.is_service_enabled
+                        UI.ChangeWidget(Id(:service_status), :Label, _('Enabled, but Not Running'))
+                        UI.ChangeWidget(Id(:service_toggle), :Label, _('Start the service'))
+                    else
+                        UI.ChangeWidget(Id(:service_status), :Label, _('Disabled and Not Running'))
+                        UI.ChangeWidget(Id(:service_toggle), :Label, _('Enable and start the service'))
+                    end
                     UI.ChangeWidget(Id(:config_status), :Label, _('Unknown'))
-                    UI.ChangeWidget(Id(:genconf), :Label, _('Re-generate configuration and enable the service'))
-                    UI.ChangeWidget(Id(:service_toggle), :Label, _('Enable and start the service'))
+                    UI.ChangeWidget(Id(:genconf), :Label, _('Re-generate configuration and start the service'))
                 when :no_conf
+                    if SaptuneConfInst.is_service_enabled
+                        UI.ChangeWidget(Id(:service_status), :Label, _('Enabled and Running'))
+                        UI.ChangeWidget(Id(:service_toggle), :Label, _('Disable and stop the service'))
+                    else
+                        UI.ChangeWidget(Id(:service_status), :Label, _('Disabled and Running'))
+                        UI.ChangeWidget(Id(:service_toggle), :Label, _('Stop the service'))
+                    end
+                    UI.ChangeWidget(Id(:config_status), :Label, _('Absent'))
+                    UI.ChangeWidget(Id(:genconf), :Label, _('Generate configuration automatically'))
+                when :unknown
                     UI.ChangeWidget(Id(:service_status), :Label, _('Unknown'))
                     UI.ChangeWidget(Id(:config_status), :Label, _('Absent'))
                     UI.ChangeWidget(Id(:genconf), :Label, _('Generate configuration automatically'))
-                    UI.ChangeWidget(Id(:service_toggle), :Label, _('Disable and stop the service'))
+                    UI.ChangeWidget(Id(:service_toggle), :Label, _('Enable and start the service'))
             end
             UI.RecalcLayout
 
@@ -145,7 +165,7 @@ Would you like to install and use it now?')) && Package.DoInstall(['saptune'])
                                         else
                                             Popup.ErrorDetails(_('Failed to disable saptune'), _('Error output: ') + out)
                                         end
-                                    when :stopped
+                                    when :stopped, :unknown
                                         success, out = SaptuneConfInst.set_state(true)
                                         if success
                                             Popup.AnyMessage(_('Success'), _('saptune is now enabled.'))
