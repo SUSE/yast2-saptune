@@ -1,6 +1,6 @@
 # encoding: utf-8
 # ------------------------------------------------------------------------------
-# Copyright (c) 2016 SUSE LINUX GmbH, Nuernberg, Germany.
+# Copyright (c) 2016-2021 SUSE LLC.
 #
 # This program is free software; you can redistribute it and/or modify it under
 # the terms of version 3 of the GNU General Public License as published by the
@@ -201,7 +201,7 @@ module Saptune
         end
     end
 
-    # Manipulate sapconf and saptune daemons.
+    # Manipulate sapconf and saptune services.
     class SaptuneConf
         include Yast::I18n
         include Yast::Logger
@@ -234,34 +234,67 @@ module Saptune
             end
         end
 
+        # Call systemctl (external program) to find out, if a service is enabled
+        def is_service_enabled
+            if is_new_saptune_vers
+                service = "saptune.service"
+            else
+                service = "tuned.service"
+            end
+            out, status = Open3.capture2e('systemctl', 'is-enabled', service)
+            log.info "systemctl is-enabled #{service}: #{status} #{out}"
+            if status.exitstatus == 0
+                return true
+            else
+                return false
+            end
+        end
+
         # Return status of saptune:
         # :ok - saptune is running and tuning has been done
-        # :stopped - saptune's daemon (tuned.service) is stopped
-        # :no_conf - saptune is not configured or tuned.service profile is incorrect
+        # :stopped - saptune's service (saptune.service) is stopped
+        # :not_tuned - saptune has no applied notes
+        # :no_conf - saptune is not configured (saptune is not the tuned profile)
         def state
-            _, status = call_saptune_and_log('daemon', 'status')
+            if is_new_saptune_vers
+                _, status = call_saptune_and_log('service', 'status')
+            else
+                _, status = call_saptune_and_log('daemon', 'status')
+            end
             if status == 0
                 return :ok
             elsif status == 1
                 return :stopped
-            else
+            elsif status == 2
                 return :no_conf
+            elsif status == 3
+                return :not_tuned
+            else
+                return :unknown
             end
         end
 
-        # Enable+start or disable+stop saptune and its daemon (tuned.service).
-        # It may take up to a minute to enable+start the daemon.
+        # Enable+start or disable+stop saptune and its service (saptune.service).
+        # It may take up to a minute to enable+start the serice.
         # Return boolean status and debug output (only in error case).
         # Boolean status is true only if the operation is carried out successfully.
         def set_state(enable)
             if enable
                 disable_sapconf
-                out, status = call_saptune_and_log('daemon', 'start')
+                if is_new_saptune_vers
+                    out, status = call_saptune_and_log('service', 'takeover')
+                else
+                    out, status = call_saptune_and_log('daemon', 'start')
+                end
                 if status != 0
                     return false, out
                 end
             else
-                out, status = call_saptune_and_log('daemon', 'stop')
+                if is_new_saptune_vers
+                    out, status = call_saptune_and_log('service', 'disablestop')
+                else
+                    out, status = call_saptune_and_log('daemon', 'stop')
+                end
                 if status != 0
                     return false, out
                 end
@@ -276,6 +309,15 @@ module Saptune
             has_nw = ['log', 'data', 'work', 'exe'].all?{|name| Dir.glob("/usr/sap/*/#{name}").any?}
             has_hana = Dir.glob('/usr/sap/*/HDB*/HDB').any?
             return [has_nw, has_hana]
+        end
+
+        # Look, if saptune version >= 3 is installed
+        def is_new_saptune_vers
+            path_workarea = '/var/lib/saptune/working/notes'
+            if !File.exists?(path_workarea)
+                return false
+            end
+            return true
         end
 
         # Return true only if sapconf is presently used, and its configuration has never deviated from default.
@@ -327,6 +369,8 @@ module Saptune
 
             if can_replace_sapconf
                 disable_sapconf
+                # revert settings first before add the new one.
+                out, status = call_saptune_and_log('revert', 'all')
                 log.info 'tuning system using saptune'
                 if has_nw && has_hana
                     path_solution = '/usr/share/saptune/solutions'
@@ -360,19 +404,30 @@ module Saptune
                         return has_nw, has_hana, false, out
                     end
                 end
-                out, status = call_saptune_and_log('daemon', 'start')
+                if is_new_saptune_vers
+                    out, status = call_saptune_and_log('service', 'takeover')
+                else
+                    out, status = call_saptune_and_log('daemon', 'start')
+                end
                 return has_nw, has_hana, status == 0, out
             end
 
             log.info 'tuning system using sapconf'
             if has_nw
-                out, status = call_sapconf_and_log('start')
+                out, status = call_sapconf_and_log('netweaver')
                 if status != 0
                     return has_nw, has_hana, false, out
                 end
             end
             if has_hana
                 out, status = call_sapconf_and_log('hana')
+                if status != 0
+                    return has_nw, has_hana, false, out
+                end
+            end
+            if !has_hana && !has_nw
+                # start sapconf with the last active profile
+                out, status = call_sapconf_and_log('start')
                 if status != 0
                     return has_nw, has_hana, false, out
                 end
