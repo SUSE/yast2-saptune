@@ -1,9 +1,9 @@
 -------------------------------------------------------------------
-Mon Jul  5 13:19:06 UTC 2021 - abriel@suse.com
+Wed Jul 21 09:40:48 UTC 2021 - abriel@suse.com
 
 - version update from 1.3 to 1.4 to include the following fixes:
 
-- Fixes for jsc#SLE-6457
+- Fixes for bsc#1188321
 
   Exchange the tuned daemon handling with the new saptune service
   handling for saptune version 3, but stay with the old behaviour
